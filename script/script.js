@@ -1,4 +1,4 @@
-const generateId = () => `calc${Math.round(Math.random * 1e8).toString(16)}`
+const generateId = () => `calc${Math.round(Math.random() * 1e8).toString(16)}`;
 
 const totalBalance = document.querySelector('.total__balance'),
     totalMoneyIncome = document.querySelector('.total__money-income'),
@@ -8,45 +8,21 @@ const totalBalance = document.querySelector('.total__balance'),
     operationName = document.querySelector('.operation__name'),
     operationAmount = document.querySelector('.operation__amount');
 
-let dbOperation = [
-    {
-        id: '1',
-        description: 'Получил зарплату',
-        amount: 30000,
-    },
-    {
-        id: '1',
-        description: 'Квартплата',
-        amount: -10000,
-    },
-    {
-        id: '1',
-        description: 'Купил обувь',
-        amount: -6000,
-    },
-    {
-        id: '1',
-        description: 'Заказ на фриланс',
-        amount: 10000,
-    },
-    {
-        id: '1',
-        description: 'Купил книги',
-        amount: -2500,
-    },
-];
+let dbOperation = JSON.parse(localStorage.getItem('calc')) || [];
 
 const renderOperation = (operation) => {
     const className = operation.amount < 0 ?
          'history__item-minus' : 
          'history__item-plus';
+
     const listItem = document.createElement('li');
 
     listItem.classList.add('history__item');
     listItem.classList.add(className);
+
     listItem.innerHTML = `${operation.description}
         <span class="history__money">${operation.amount} ₽</span>
-        <button class="history_delete">x</button>
+        <button class="history_delete" data-id="${operation.id}">x</button>
     `;
     historyList.append(listItem);
 };
@@ -78,7 +54,7 @@ const addOperation = (event) => {
         const operation = {
             id: generateId(),
             description: operationNameValue,
-            amount: operationAmountValue,
+            amount: +operationAmountValue,
         };
 
         dbOperation.push(operation);
@@ -92,12 +68,27 @@ const addOperation = (event) => {
     operationAmount.value = '';
 };
 
+//Удаление истории
+const deleteOperation = (event) => {
+    const target = event.target;
+
+    if (target.classList.contains('history_delete')) {
+        dbOperation = dbOperation
+            .filter(operation => operation.id !== target.dataset.id);
+
+        init();
+    }
+};
+
 const init = () => {
     historyList.textContent = '';
     dbOperation.forEach(renderOperation)
     updateBalance();
+    localStorage.setItem('calc', JSON.stringify(dbOperation))
 };
 
 form.addEventListener('submit', addOperation);
+
+historyList.addEventListener('click', deleteOperation);
 
 init();
